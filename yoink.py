@@ -135,17 +135,17 @@ def download_torrent(session, tid, name):
   if add_all_torrents_to_db == True:
     addTorrentToDB(tid)
     print 'Added {} to database.'.format(tid)
-    return
+    return False
 
   if torrentAlreadyDownloaded(tid):
     print 'I have previously downloaded {}.'.format(tid)
-    return
+    return False
 
   path = u''.join(os.path.join(target, name)).encode('utf-8').strip()
   if os.path.exists(path):
     print 'I already haz {}.'.format(tid)
     addTorrentToDB(tid)
-    return
+    return False
 
   if not hasattr(download_torrent, 'authdata'):
     r = session.get('https://what.cd/ajax.php?action=index', headers=headers)
@@ -159,6 +159,8 @@ def download_torrent(session, tid, name):
       f.write(chunk)
   addTorrentToDB(tid)
   print 'Yoink!'
+
+  return True
 
 def main():
   rcpath=os.path.expanduser('~/.yoinkrc')
@@ -330,8 +332,8 @@ def main():
         continueLeeching = False
         print 'Your storage equals or exceeds ' + str(max_storage) + 'MB, exiting...'
         break
-      download_torrent(s, torrent_id, '{}.torrent'.format(torrent_id))
-      time.sleep(2)
+      if download_torrent(s, torrent_id, '{}.torrent'.format(torrent_id)):
+        time.sleep(2)
 
     page += 1
     time.sleep(2)
