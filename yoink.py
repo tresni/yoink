@@ -2,9 +2,11 @@
 
 import time
 import cPickle as pickle
+import time
 import json
 import requests
 import HTMLParser
+import html5lib
 import os
 import re
 import sys
@@ -295,40 +297,44 @@ def main():
   continueLeeching = True
   page = 1
   while continueLeeching:
-    r = s.get('https://what.cd/ajax.php?action=browse&' + search_params + "&page={}".format(page), headers=headers)
-    data = json.loads(r.content)
-    if data['response'] == []:
-        print data['status']
-        return
-    for group in data['response']['results']:
+    r = s.get('https://what.cd/torrents.php', params={
+        'action': 'basic',
+        'freetorrent': 1,
+        'order_by': 'time',
+        'order_way': 'desc',
+        'page': page
+    }, headers=headers)
+
+    if r.status_code != 200:
+        print r.status_code
+        print r.text
+
+    document = html5lib.parse(r.text, treebuilder="lxml", namespaceHTMLElements=False)
+    results = document.xpath("//tr[contains(@class, 'torrent')]")
+
+    if not results:
+        print "No more torrents"
+        break
+
+    for r in results:
+      download = r.xpath(".//a[@title='Download']/@href")[0]
+      torrent_id = re.search('id=(\d+)', download).group(1)
+
       if max_age != False:
-        if int(group['groupTime']) < oldest_time and not add_all_torrents_to_db:
+        date = r.xpath(".//span[contains(@class, 'time')]/@title")[0]
+        date = time.mktime(time.strptime(date, "%b %d %Y, %H:%M"))
+        if date < oldest_time and not add_all_torrents_to_db:
           continueLeeching = False
           break
       if isStorageFull(max_storage) and not add_all_torrents_to_db:
         continueLeeching = False
         print 'Your storage equals or exceeds ' + str(max_storage) + 'MB, exiting...'
         break
-      if 'torrents' in group:
-        for torrent in group['torrents']:
-          if not torrent['isFreeleech']:
-            continue
-          fn = clean_fn('{}. {} - {} - {} ({} - {} - {}).torrent'.format(torrent['torrentId'], group['artist'][:50], group['groupYear'], group['groupName'][:50], torrent['media'], torrent['format'], torrent['encoding']))
-          download_torrent(s, torrent['torrentId'], fn)
-      else:
-        fn = clean_fn('{} {}.torrent'.format(group['torrentId'], group['groupName'][:100]))
-        download_torrent(s, group['torrentId'], fn)
+      download_torrent(s, torrent_id, '{}.torrent'.format(torrent_id))
       time.sleep(2)
+
     page += 1
-    if data['response']['results'] == []:
-      print '\n'
-      print 'Your search returned 0 results. Please check your filters for conflicts such as FLAC + 320.'
-      print '\n'
-      return
-    else:
-      if page > data['response']['pages']:
-        break
-      time.sleep(2)
+    time.sleep(2)
 
   print '\n'
   print "Phew! All done."
