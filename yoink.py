@@ -202,29 +202,32 @@ def main():
         printHelpMessage('Wrote initial-run configuration file to ~/.yoinkrc\nYou will need to modify this file before continuing!\nSee below for accepted parameters:\n')
         return 0
     else:
-        rcf = open(rcpath)
-        global user
-        user = rcf.readline().rstrip('\n')[5:]
-        global password
-        password = rcf.readline().rstrip('\n')[9:]
-        global target
-        target = os.path.expanduser(rcf.readline().rstrip('\n')[7:])
-        global max_age
-        max_age = rcf.readline().rstrip('\n')[8:]
-        global max_storage
-        max_storage = rcf.readline().rstrip('\n')[18:]
-        global storage_dir
-        storage_dir = rcf.readline().rstrip('\n')[12:]
-        global track_by_index_number
-        track_by_index_number = rcf.readline().rstrip('\n')[22:]
-        global encoding
-        encoding = rcf.readline().rstrip('\n')[9:]
-        global format
-        format = rcf.readline().rstrip('\n')[7:]
-        global media
-        media = rcf.readline().rstrip('\n')[6:]
-        global releasetype
-        releasetype = rcf.readline().rstrip('\n')[12:]
+        global user, password, target, max_age, max_storage, storage_dir, \
+               track_by_index_number, format, media, releasetype
+        with open(rcpath) as rcf:
+            for line in rcf:
+                key, value = line.split(':', 1)
+                key = key.lower()
+                if key == "user":
+                    user = value
+                elif key == "password":
+                    password = value
+                elif key == "target":
+                    target = value
+                elif key == "max_age":
+                    max_age = value
+                elif key == "max_storage":
+                    max_storage = value
+                elif key == "storage_dir":
+                    storage_dir = value
+                elif key == "track_by_index_number":
+                    track_by_index_number = value
+                elif key == "format":
+                    format = value
+                elif key == "media":
+                    media = value
+                elif key == "releasetype":
+                    releasetype = value
 
         if not user or not password or not target or not track_by_index_number:
             printHelpMessage('ERROR: The ~/.yoinkrc configuration file appears incomplete!\nYou may need to use option --recreate-yoinkrc to revert your ~/.yoinkrc to the initial-run state for this version of Yoink.\n')
