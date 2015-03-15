@@ -163,35 +163,56 @@ def main():
             raise argparse.ArgumentTypeError("%r does not exist" % string)
 
     parser = CustomArgumentParser(fromfile_prefix_chars="@")
-    parser.add_argument("--user", type=str, required=True,
-                        help="what.cd username")
-    parser.add_argument("--password", type=str, required=True,
-                        help="what.cd password")
-    parser.add_argument("--target", type=path_exists, required=True,
-                        help="target directory")
-    parser.add_argument("--max_age", type=positive_number, default=3,
-                        help="Max age of torrent in days")
-    parser.add_argument("--max_storage_in_mb", type=positive_number, default=0,
-                        dest="max_storage",
-                        help="Max disk space used by storage directory")
-    parser.add_argument("--storage_dir", type=path_exists, default="~",
-                        help="Where torrent data is stored")
-    parser.add_argument("--track_by_index_number", type=bool, default=True,
-                        help="Track index numbers")
-    parser.add_argument("--encoding", type=str,
+    parser.add_argument("--user", "-u", type=str, required=True,
+                        help="your what.cd username")
+    parser.add_argument("--password", "-p", type=str, required=True,
+                        help="your what.cd password")
+    parser.add_argument("--target", "-t", type=path_exists, required=True,
+                        help="your torrent client watch directory")
+    parser.add_argument("--max_age", "-o", type=positive_number, default=3,
+                        help="the maximum age of a torrent in days that "
+                             "yoink will download. If set to 0, yoink will "
+                             "not check the age of the torrent.")
+    parser.add_argument("--max_storage_in_mb", "-b", type=positive_number,
+                        default=0, dest="max_storage",
+                        help="the maximum size in megabytes of your storage "
+                             "directory. If the size of your storage "
+                             "directory exceeds the specified size, yoink "
+                             "will stop downloading new torrents. This runs "
+                             "on the assumption that your torrent client "
+                             "preallocated the space required for each "
+                             "torrent immediately after the .torrent folder "
+                             "is added to your watch directory. If set to 0, "
+                             "the default, yoink will not check the size of "
+                             "your storage area. This is intended for "
+                             "seedboxes with limited storage quotas.")
+    parser.add_argument("--storage_dir", "-s", type=path_exists, default="~",
+                        help="your torrent data directory. Defaults to your "
+                             "home directory")
+    parser.add_argument("--track_by_index_number", "-i", type=bool, default=True,
+                        help="write all downloaded torrent IDs to ~/.yoink.db "
+                             "and use this as the primary mechanism for "
+                             "checking if a given torrent has already been "
+                             "yoinked.")
+    parser.add_argument("--encoding", "-e", type=str,
                         help="Encoding to download")
-    parser.add_argument("--format", type=str,
+    parser.add_argument("--format", "-f", type=str,
                         help="Formats to download")
-    parser.add_argument("--media", type=str,
+    parser.add_argument("--media", "-m", type=str,
                         help="Media to download")
-    parser.add_argument("--releasetype", type=str,
+    parser.add_argument("--releasetype", "-r", type=str,
                         help="Release type to download")
     parser.add_argument("--recreate-yoinkrc", action="store_true",
-                        help="Recreate initial .yoinkrc")
+                        help="deletes existing ~/.yoinkrc and generates new "
+                             "file with default settings. Use this if "
+                             "migrating from another version of yoink.py")
     parser.add_argument("--add-all-torrents-to-db", "-a",
                         action="store_true",
-                        help="Add all parsed torrents to the database.  Good "
-                             "for the inital run.")
+                        help="adds all existing freeleech torrents to the "
+                             "yoink database without downloading the .torrent "
+                             "file. Use this option if you want to ignore all "
+                             "existing freeleech torrents and only yoink new "
+                             "ones.")
 
     if os.path.exists(rcpath):
         args = ["@%s" % rcpath] + sys.argv[1:]
