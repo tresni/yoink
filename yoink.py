@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import argparse
 import time
@@ -11,7 +12,7 @@ import re
 import sys
 import sqlite3
 
-## SAFE TO EDIT ##
+# SAFE TO EDIT
 dbpath = '~/.yoink.db'
 
 defaultrc = [
@@ -29,7 +30,7 @@ defaultrc = [
 ]
 
 headers = {
-  'User-Agent': 'Yoink! Beta'
+    'User-Agent': 'Yoink! Beta'
 }
 
 # TODO: Remove this when we get rid of the global below
@@ -61,8 +62,8 @@ def torrentAlreadyDownloaded(tid):
             else:
                 torrent_found = True
         except Exception as e:
-            print 'Error when executing SELECT on ~/.yoink.db:'
-            print str(e)
+            print('Error when executing SELECT on ~/.yoink.db:')
+            print(str(e))
             sys.exit()
         finally:
             if indexdb:
@@ -80,8 +81,8 @@ def addTorrentToDB(tid):
             indexdbc.execute("INSERT OR REPLACE INTO snatchedtorrents values (?)", [tid])
             indexdb.commit()
         except Exception as e:
-            print 'Error when executing INSERT on ~/.yoink.db:'
-            print str(e)
+            print('Error when executing INSERT on ~/.yoink.db:')
+            print(str(e))
             sys.exit()
         finally:
             if indexdb:
@@ -97,38 +98,41 @@ def checkForArg(arg):
 
 def download_torrent(session, tid, name):
     if not os.path.exists(args.target):
-        print 'Target Directory does not exist, creating...'
+        print('Target Directory does not exist, creating...')
         os.mkdir(args.target)
 
     if args.add_all_torrents_to_db:
         addTorrentToDB(tid)
-        print 'Added {} to database.'.format(tid)
+        print('Added {} to database.'.format(tid))
         return False
 
     if torrentAlreadyDownloaded(tid):
-        print 'I have previously downloaded {}.'.format(tid)
+        print('I have previously downloaded {}.'.format(tid))
         return False
 
     path = u''.join(os.path.join(args.target, name)).encode('utf-8').strip()
     if os.path.exists(path):
-        print 'I already haz {}.'.format(tid)
+        print('I already haz {}.'.format(tid))
         addTorrentToDB(tid)
         return False
 
     if not hasattr(download_torrent, 'authdata'):
         r = session.get('https://what.cd/ajax.php?action=index', headers=headers)
         d = json.loads(r.content)
-        download_torrent.authdata = '&authkey={}&torrent_pass={}'.format(d['response']['authkey'], d['response']['passkey'])
+        download_torrent.authdata = '&authkey={}&torrent_pass={}'.format(d['response']['authkey'],
+                                                                         d['response']['passkey'])
 
-    print '{}:'.format(tid),
-    dl = session.get('https://what.cd/torrents.php?action=download&id={}{}'.format(tid, download_torrent.authdata), headers=headers)
+    print('{}:'.format(tid), end='')
+    dl = session.get('https://what.cd/torrents.php?action=download&id={}{}'.format(
+        tid, download_torrent.authdata), headers=headers)
     with open(path, 'wb') as f:
-        for chunk in dl.iter_content(1024*1024):
+        for chunk in dl.iter_content(1024 * 1024):
             f.write(chunk)
     addTorrentToDB(tid)
-    print 'Yoink!'
+    print('Yoink!')
 
     return True
+
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
@@ -236,7 +240,8 @@ def main():
         indexdb.commit()
 
     if args.add_all_torrents_to_db and not args.track_by_index_number:
-        print 'WARNING: Adding all torrents to database with tracking by index number disabled will make this operation useless until you re-enable index number tracking.'
+        print('WARNING: Adding all torrents to database with tracking by index number disabled'
+              ' will make this operation useless until you re-enable index number tracking.')
 
     s = requests.session()
 
@@ -256,7 +261,7 @@ def main():
         except requests.exceptions.TooManyRedirects:
             s.cookies.clear()
         except requests.exceptions.RequestException as e:
-            print e
+            print(e)
             sys.exit(1)
 
     if r.url != u'https://what.cd/index.php':
@@ -266,7 +271,7 @@ def main():
                          'keeplogged': 1},
                    headers=headers)
         if r.url != u'https://what.cd/index.php':
-            print "Login failed - come on, you're looking right at your password!"
+            print("Login failed - come on, you're looking right at your password!")
             return
 
     with open(cookiefile, 'w') as f:
@@ -292,14 +297,14 @@ def main():
         }, headers=headers)
 
         if r.status_code != 200:
-            print r.status_code
-            print r.text
+            print(r.status_code)
+            print(r.text)
 
         document = html5lib.parse(r.text, treebuilder="lxml", namespaceHTMLElements=False)
         results = document.xpath("//tr[contains(@class, 'torrent')]")
 
         if not results:
-            print "No more torrents"
+            print("No more torrents")
             break
 
         for r in results:
@@ -312,9 +317,10 @@ def main():
                 if date < oldest_time and not args.add_all_torrents_to_db:
                     continueLeeching = False
                     break
-            if isStorageFull(args.max_storage, args.storage_dir) and not args.add_all_torrents_to_db:
+            if isStorageFull(args.max_storage, args.storage_dir) and \
+                    not args.add_all_torrents_to_db:
                 continueLeeching = False
-                print 'Your storage equals or exceeds ' + str(args.max_storage) + 'MB, exiting...'
+                print('Your storage equals or exceeds ' + str(args.max_storage) + 'MB, exiting...')
                 break
             if download_torrent(s, torrent_id, '{}.torrent'.format(torrent_id)):
                 time.sleep(2)
@@ -322,12 +328,12 @@ def main():
         page += 1
         time.sleep(2)
 
-    print """
+    print("""
 Phew! All done.
 
 Yoink!: The Freeleech Torrent Grabber for What.CD
 \"Go Yoink! Yourself!\"
-"""
+""")
 
 if __name__ == '__main__':
     main()
