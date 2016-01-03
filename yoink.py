@@ -205,10 +205,36 @@ def main():
                              "checking if a given torrent has already been "
                              "yoinked.")
     parser.add_argument("--encoding", "-e", type=str,
+                        choices=['192',
+                                 'APS (VBR)',
+                                 'V2 (VBR)',
+                                 'V1 (VBR)',
+                                 '256',
+                                 'APX (VBR)',
+                                 'V0 (VBR)',
+                                 '320',
+                                 'Lossless',
+                                 '24bit Lossless',
+                                 'V8 (VBR)',
+                                 'Other'],
                         help="Encoding to download")
     parser.add_argument("--format", "-f", type=str,
+                        choices=['MP3',
+                                 'FLAC',
+                                 'AAC',
+                                 'AC3',
+                                 'DTS'],
                         help="Formats to download")
     parser.add_argument("--media", "-m", type=str,
+                        choices=['CD',
+                                 'DVD',
+                                 'Vinyl',
+                                 'Soundboard',
+                                 'SACD',
+                                 'DAT',
+                                 'Cassette',
+                                 'WEB',
+                                 'Blu-ray'],
                         help="Media to download")
     parser.add_argument("--releasetype", "-r", type=str,
                         help="Release type to download")
