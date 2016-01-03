@@ -129,6 +129,12 @@ def download_torrent(session, tid, name):
         for chunk in dl.iter_content(1024 * 1024):
             f.write(chunk)
     addTorrentToDB(tid)
+
+    if args.execute:
+        print('Executing on {}: {}'.format(path, args.execute))
+        os.environ['YOINK_FILE'] = path
+        os.system(args.execute)
+        del os.environ['YOINK_FILE']
     print('Yoink!')
 
     return True
@@ -217,6 +223,9 @@ def main():
                              "file. Use this option if you want to ignore all "
                              "existing freeleech torrents and only yoink new "
                              "ones.")
+    parser.add_argument("--execute",
+                        type=str,
+                        help="command to execute, will set global $FILE with filename")
 
     if os.path.exists(rcpath):
         args = ["@%s" % rcpath] + sys.argv[1:]
